@@ -1,0 +1,29 @@
+# Financials sector peer universe (~25 large-cap names)
+# Used for percentile ranking. Update quarterly.
+sector: financials
+tickers:
+  - JPM
+  - BAC
+  - WFC
+  - C
+  - GS
+  - MS
+  - USB
+  - PNC
+  - TFC
+  - SCHW
+  - BLK
+  - BX
+  - KKR
+  - AXP
+  - V
+  - MA
+  - PYPL
+  - COF
+  - BRK-B
+  - SPGI
+  - MCO
+  - CME
+  - ICE
+  - CB
+  - PGR

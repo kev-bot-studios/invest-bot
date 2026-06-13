@@ -1,0 +1,63 @@
+# Default run configuration
+# Copy and customize for your runs.
+
+tickers: [AAPL, MSFT, GOOGL]
+
+# REQUIRED — no default. Set this or pass --sector. Must match a peer file in
+# config/peers/ (the <name> of <name>.yaml): technology, financials, healthcare,
+# energy, consumer_discretionary, consumer_staples. Scores are peer-relative, so the
+# sector must fit the tickers (e.g. don't rank JPM against the technology universe).
+# sector: technology
+
+# Which data sources to enable
+sources:
+  yfinance_prices: true
+  yfinance_fundamentals: true
+  yfinance_news: true
+  edgar_companyfacts: true     # peer universe pull; no key required
+  edgar_filings: true          # MD&A + risk factor sections; no key required
+  edgar_form4: true            # insider activity; no key required
+  fred: true                   # requires FRED_API_KEY env var
+  finnhub: false               # requires FINNHUB_API_KEY env var; optional
+
+# LLM provider fallback order (first available key wins)
+llm_providers:
+  - name: google_ai_studio
+    base_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
+    api_key_env: GOOGLE_AI_STUDIO_API_KEY
+    model: gemini-2.5-flash
+    rpm_limit: 10
+  - name: openrouter
+    base_url: "https://openrouter.ai/api/v1"
+    api_key_env: OPENROUTER_API_KEY
+    # NOTE: OpenRouter free-model slugs rotate AND get upstream-throttled at peak.
+    # If calls 404 or 429 persistently, list current ones at
+    # https://openrouter.ai/api/v1/models (filter ids ending ':free') and swap here.
+    # Verified working alternative: nvidia/nemotron-3-super-120b-a12b:free
+    model: openai/gpt-oss-120b:free
+    rpm_limit: 20
+  - name: ollama
+    base_url: "http://localhost:11434/v1"
+    # Local last-resort fallback — no API key needed (omit api_key_env).
+    # Runs whatever model you've pulled; list yours with `ollama list` and match here.
+    # Small local models are noisier than the cloud providers; treat their output
+    # as a rough estimate. The pipeline still falls through gracefully if Ollama is
+    # not running.
+    model: llama3.2:latest
+    rpm_limit: 1000
+
+# Factor score weights (must sum to 1.0)
+weights:
+  valuation: 0.20
+  quality: 0.25
+  growth: 0.25
+  momentum: 0.15
+  insider: 0.05
+  filing_tone: 0.05
+  news_tone: 0.05
+
+# Persistence
+db_path: invest_bot.db
+cache_dir: cache
+
+prompt_version: "v1"

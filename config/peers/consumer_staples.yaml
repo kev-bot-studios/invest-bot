@@ -1,0 +1,29 @@
+# Consumer staples peer universe (~25 large-cap names)
+# Used for percentile ranking. Update quarterly.
+sector: consumer_staples
+tickers:
+  - PG
+  - KO
+  - PEP
+  - COST
+  - WMT
+  - TGT
+  - MDLZ
+  - CL
+  - MO
+  - PM
+  - EL
+  - KMB
+  - GIS
+  - KHC
+  - SYY
+  - ADM
+  - KR
+  - HSY
+  - STZ
+  - KDP
+  - MNST
+  - CHD
+  - CAG
+  - CLX
+  - TSN

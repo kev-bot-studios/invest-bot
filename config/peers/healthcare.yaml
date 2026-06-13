@@ -1,0 +1,29 @@
+# Healthcare sector peer universe (~25 large-cap names)
+# Used for percentile ranking. Update quarterly.
+sector: healthcare
+tickers:
+  - UNH
+  - JNJ
+  - LLY
+  - ABBV
+  - MRK
+  - PFE
+  - TMO
+  - ABT
+  - DHR
+  - BMY
+  - AMGN
+  - GILD
+  - VRTX
+  - REGN
+  - ISRG
+  - MDT
+  - SYK
+  - BSX
+  - CVS
+  - CI
+  - HUM
+  - ELV
+  - ZTS
+  - BDX
+  - HCA
