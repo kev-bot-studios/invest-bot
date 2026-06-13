@@ -1,0 +1,29 @@
+# Technology sector peer universe (~25 large-cap tech names)
+# Used for percentile ranking. Update quarterly.
+sector: technology
+tickers:
+  - AAPL
+  - MSFT
+  - GOOGL
+  - GOOG
+  - META
+  - AMZN
+  - NVDA
+  - AMD
+  - INTC
+  - QCOM
+  - AVGO
+  - TXN
+  - ORCL
+  - CRM
+  - ADBE
+  - NOW
+  - SNOW
+  - SHOP
+  - NET
+  - DDOG
+  - PANW
+  - CRWD
+  - ZS
+  - MDB
+  - TEAM

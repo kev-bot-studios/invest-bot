@@ -1,0 +1,28 @@
+# Temporary debug work / scratch work
+temp_debug
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+invest_bot_venv/
+env/
+
+# Data / cache / generated results
+cache/
+reports/
+*.db
+
+# Secrets
+.env
+*.env
+config/secrets.yaml
+
+# IDE
+.idea/
+.vscode/
+*.swp

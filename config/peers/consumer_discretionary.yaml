@@ -1,0 +1,29 @@
+# Consumer discretionary peer universe (~25 large-cap names)
+# Used for percentile ranking. Update quarterly.
+sector: consumer_discretionary
+tickers:
+  - AMZN
+  - TSLA
+  - HD
+  - MCD
+  - NKE
+  - LOW
+  - SBUX
+  - TJX
+  - BKNG
+  - CMG
+  - ABNB
+  - MAR
+  - GM
+  - F
+  - ORLY
+  - AZO
+  - ROST
+  - YUM
+  - HLT
+  - LULU
+  - DHI
+  - LEN
+  - APTV
+  - EBAY
+  - DG

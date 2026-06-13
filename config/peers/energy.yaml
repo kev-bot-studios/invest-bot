@@ -1,0 +1,29 @@
+# Energy sector peer universe (~25 large-cap names)
+# Used for percentile ranking. Update quarterly.
+sector: energy
+tickers:
+  - XOM
+  - CVX
+  - COP
+  - EOG
+  - SLB
+  - MPC
+  - PSX
+  - VLO
+  - OXY
+  - WMB
+  - KMI
+  - OKE
+  - HES
+  - DVN
+  - FANG
+  - HAL
+  - BKR
+  - TRGP
+  - LNG
+  - CTRA
+  - DINO
+  - APA
+  - EQT
+  - AR
+  - ET
