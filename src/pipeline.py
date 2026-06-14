@@ -32,6 +32,7 @@ class TickerResult:
     extractions: dict
     synthesis: Optional[dict]
     report_path: Optional[str] = None
+    report_md: Optional[str] = None
     errors: list[str] = field(default_factory=list)
 
 
@@ -40,6 +41,18 @@ class RunResult:
     run_id: str
     ticker_results: list[TickerResult]
     comparative: Optional[dict]
+    peer_distributions: dict
+
+
+@dataclass
+class ScanResult:
+    run_id: str
+    wide_results: list[TickerResult]   # every name in the sector, computed scores only
+    deep_results: list[TickerResult]   # the flagged names, full LLM pass
+    flagged: list[str]                 # tickers selected for the deep pass
+    qualifying: set[str]               # tickers that cleared the divergence bar
+    comparative: Optional[dict]
+    scan_report_path: Optional[str]
     peer_distributions: dict
 
 
@@ -153,6 +166,253 @@ def run(cfg: RunConfig, output_dir: str = "reports") -> RunResult:
     )
 
 
+def scan_sector(
+    cfg: RunConfig, output_dir: str = "reports", deep_count: int = 3,
+) -> ScanResult:
+    """Idea-generation scan: score the whole sector universe (cheap, no LLM),
+    flag the most divergent names (high quality+growth, low valuation), then run
+    the full LLM pass only on those. Emits one combined report."""
+    import os
+    os.makedirs(output_dir, exist_ok=True)
+
+    run_id = str(uuid.uuid4())[:8]
+    started_dt = datetime.now()
+    started_at = started_dt.isoformat()
+    run_stamp = started_dt.strftime("%Y-%m-%d_%H%M%S")
+    cache = Cache(cfg.cache_dir)
+
+    peer_tickers = load_peer_tickers(cfg.sector)
+    if not peer_tickers:
+        raise ValueError(f"No peer universe found for sector '{cfg.sector}'.")
+
+    init_db(cfg.db_path)
+    insert_run(cfg.db_path, run_id, started_at, {
+        "scan_sector": cfg.sector, "universe": peer_tickers,
+        "deep_count": deep_count, "prompt_version": cfg.prompt_version,
+    }, cfg.prompt_version)
+
+    llm_client = LLMClient(cfg.llm_providers)
+    provider = cfg.first_available_provider()
+    llm_available = provider is not None
+
+    # --- Peer universe distributions (the scoring basis) ---
+    print(f"\n[scan:{run_id}] Refreshing peer universe for '{cfg.sector}' "
+          f"({len(peer_tickers)} names)...")
+    peer_distributions: dict = {}
+    try:
+        peer_distributions = refresh_peer_universe(
+            cfg.sector, peer_tickers, cache, cfg.db_path
+        )
+        print(f"  Peer universe: {len(peer_distributions)} metric distributions.")
+    except Exception as e:
+        print(f"  Warning: peer universe refresh failed: {e}")
+
+    # Macro is constant across a sector — only needed to populate the deep-pass
+    # synthesis prompt, so fetch it once here.
+    macro_blob: dict = {}
+    if cfg.sources.fred:
+        macro_blob = fred_src.fetch_macro_blob(cfg.sector, cache)
+
+    # --- WIDE PASS: score every name, no LLM ---
+    print(f"\n[scan:{run_id}] Wide pass — scoring {len(peer_tickers)} names "
+          f"(computed factors only)...")
+    wide_results: list[TickerResult] = []
+    for ticker in peer_tickers:
+        print(f"\n[scan:{run_id}] Scoring {ticker}...")
+        try:
+            r = _process_ticker(
+                ticker=ticker, cfg=cfg, cache=cache,
+                peer_distributions=peer_distributions, macro_blob=macro_blob,
+                llm_client=llm_client, llm_available=False,
+                run_id=run_id, run_stamp=run_stamp, output_dir=output_dir,
+                write_report=False, light=True,
+            )
+            wide_results.append(r)
+        except Exception as e:
+            print(f"  Skipped {ticker}: {e}")
+
+    # --- DIVERGENCE SELECTION ---
+    flagged, qualifying = _select_divergent(wide_results, deep_count)
+    flag_tickers = [r.ticker for r in flagged]
+    print(f"\n[scan:{run_id}] Flagged for deep analysis: "
+          f"{', '.join(flag_tickers) or '(none)'}")
+
+    # --- DEEP PASS: full LLM stack on the flagged names ---
+    deep_results: list[TickerResult] = []
+    for ticker in flag_tickers:
+        print(f"\n[scan:{run_id}] Deep pass — {ticker}...")
+        try:
+            r = _process_ticker(
+                ticker=ticker, cfg=cfg, cache=cache,
+                peer_distributions=peer_distributions, macro_blob=macro_blob,
+                llm_client=llm_client, llm_available=llm_available,
+                run_id=run_id, run_stamp=run_stamp, output_dir=output_dir,
+                write_report=True, light=False,
+            )
+            deep_results.append(r)
+        except Exception as e:
+            print(f"  Deep pass failed for {ticker}: {e}")
+
+    # --- COMPARATIVE across the flagged names ---
+    comparative = None
+    if llm_available and len(deep_results) > 1:
+        print(f"\n[scan:{run_id}] Comparative across flagged names...")
+        comp_inputs = [
+            {"ticker": r.ticker, "metrics": r.metrics,
+             "scores": r.scores, "extractions": r.extractions}
+            for r in deep_results
+        ]
+        try:
+            comparative = synth_mod.compare_tickers(
+                comp_inputs, llm_client, run_id, cfg.db_path
+            )
+            if comparative:
+                print(f"  Comparative ranking: {comparative.get('overall_ranking')}")
+        except Exception as e:
+            print(f"  Comparative call failed: {e}")
+
+    # --- COMBINED REPORT ---
+    llm_model_used = None
+    if llm_client.last_model:
+        llm_model_used = f"{llm_client.last_provider} / {llm_client.last_model}"
+    scan_md = _render_scan_md(
+        cfg.sector, wide_results, qualifying, deep_results,
+        comparative, llm_model_used, started_dt,
+    )
+    scan_path = f"{output_dir}/{cfg.sector}_scan_{run_stamp}_{run_id}.md"
+    with open(scan_path, "w") as f:
+        f.write(scan_md)
+    print(f"\n[scan:{run_id}] Combined report saved: {scan_path}")
+
+    update_run_status(cfg.db_path, run_id, "completed",
+                      provider.name if provider else None)
+
+    return ScanResult(
+        run_id=run_id,
+        wide_results=wide_results,
+        deep_results=deep_results,
+        flagged=flag_tickers,
+        qualifying=qualifying,
+        comparative=comparative,
+        scan_report_path=scan_path,
+        peer_distributions=peer_distributions,
+    )
+
+
+# Divergence thresholds (1–5 quintile factor scores). "Good business, cheap
+# multiple": clearly above-average quality and growth, clearly cheap valuation.
+_DIV_GOOD = 3.5   # quality / growth floor
+_DIV_CHEAP = 2.5  # valuation ceiling
+
+
+def _select_divergent(
+    results: list[TickerResult], count: int,
+) -> tuple[list[TickerResult], set[str]]:
+    """Rank names by a value-divergence score = avg(quality, growth) − valuation.
+    Returns (flagged, qualifying): `flagged` is the top `count` to analyze deeply
+    (qualifying names first, then filled by divergence rank); `qualifying` is the
+    set that actually cleared the divergence bar."""
+    scored: list[tuple[float, bool, TickerResult]] = []
+    for r in results:
+        q = r.scores.get("quality")
+        g = r.scores.get("growth")
+        v = r.scores.get("valuation")
+        if q is None or g is None or v is None:
+            continue
+        q, g, v = float(q), float(g), float(v)
+        divergence = (q + g) / 2.0 - v
+        qualifies = q >= _DIV_GOOD and g >= _DIV_GOOD and v <= _DIV_CHEAP
+        scored.append((divergence, qualifies, r))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    qualifying = {r.ticker for _, qf, r in scored if qf}
+
+    # Prefer names that cleared the bar; if too few, fill remaining slots by
+    # divergence rank so the deep pass always has the closest candidates.
+    quals = [r for _, qf, r in scored if qf]
+    nonquals = [r for _, qf, r in scored if not qf]
+    flagged = (quals + nonquals)[:count]
+    return flagged, qualifying
+
+
+def _sfmt(v) -> str:
+    """Format a 1–5 factor score for the scan table."""
+    if v is None:
+        return "—"
+    return f"{float(v):.1f}"
+
+
+def _render_scan_md(
+    sector: str,
+    wide_results: list[TickerResult],
+    qualifying: set[str],
+    deep_results: list[TickerResult],
+    comparative: Optional[dict],
+    llm_model_used: Optional[str],
+    started_dt,
+) -> str:
+    deep_tickers = [r.ticker for r in deep_results]
+    lines = [
+        f"# Sector Scan — {sector.replace('_', ' ').title()}",
+        "",
+        f"_Generated {started_dt.strftime('%Y-%m-%d %H:%M')} · "
+        f"{len(wide_results)} names screened · "
+        f"deep analysis: {', '.join(deep_tickers) or 'none'}_",
+    ]
+    if llm_model_used:
+        lines.append(f"_Deep-pass LLM: {llm_model_used}_")
+    lines += [
+        "",
+        "> Research aid, not investment advice. Wide-pass scores are peer-relative "
+        "quintiles (1–5); deep-pass narratives are LLM estimates.",
+        "",
+        "## Sector Screen (wide pass)",
+        "",
+        "Ranked by composite. ★ flags names with high quality + growth and low "
+        "valuation (the value-divergence candidates analyzed below).",
+        "",
+        "| | Ticker | Valuation | Quality | Growth | Momentum | Insider | Composite |",
+        "|---|--------|-----------|---------|--------|----------|---------|-----------|",
+    ]
+    ranked = sorted(
+        wide_results, key=lambda r: (r.scores.get("composite") or 0.0), reverse=True
+    )
+    for r in ranked:
+        flag = "★" if r.ticker in qualifying else ""
+        s = r.scores
+        lines.append(
+            f"| {flag} | {r.ticker} | {_sfmt(s.get('valuation'))} | "
+            f"{_sfmt(s.get('quality'))} | {_sfmt(s.get('growth'))} | "
+            f"{_sfmt(s.get('momentum'))} | {_sfmt(s.get('insider'))} | "
+            f"{_sfmt(s.get('composite'))} |"
+        )
+    lines.append("")
+
+    if not any(t in qualifying for t in deep_tickers):
+        lines += [
+            "> No names cleared the divergence bar "
+            f"(quality & growth ≥ {_DIV_GOOD}, valuation ≤ {_DIV_CHEAP}) this run. "
+            "The deep analysis below covers the closest candidates by divergence score.",
+            "",
+        ]
+
+    lines += ["## Flagged for Deep Analysis", ""]
+    if not deep_results:
+        lines += ["_No names selected for deep analysis._", ""]
+    for r in deep_results:
+        if r.report_md:
+            body = r.report_md
+            # Demote the per-report H1 to H3 so it nests under this H2 section.
+            if body.startswith("# "):
+                body = "### " + body[2:]
+            lines += [body, "", "---", ""]
+
+    if comparative:
+        lines.append(_render_comparative_md(comparative))
+
+    return "\n".join(lines)
+
+
 def _process_ticker(
     ticker: str,
     cfg: RunConfig,
@@ -164,7 +424,13 @@ def _process_ticker(
     run_id: str,
     run_stamp: str,
     output_dir: str,
+    write_report: bool = True,
+    light: bool = False,
 ) -> TickerResult:
+    # `light` skips the sources that only feed LLM extractions (news, 10-K
+    # sections) — used by the wide sector scan to score many names cheaply.
+    # `write_report=False` keeps the computed scores (and DB persistence) but
+    # skips rendering/saving a per-ticker markdown file.
     errors: list[str] = []
     snapshot: dict = {}
 
@@ -204,7 +470,7 @@ def _process_ticker(
             errors.append(f"yfinance_prices: {e}")
             print(f"  yfinance prices: FAILED ({e})")
 
-    if cfg.sources.yfinance_news:
+    if cfg.sources.yfinance_news and not light:
         try:
             news = yf_src.fetch_news(ticker, cache)
             snapshot["news"] = news
@@ -228,7 +494,7 @@ def _process_ticker(
             errors.append(f"edgar_companyfacts: {e}")
             print(f"  EDGAR companyfacts: FAILED ({e})")
 
-    if cfg.sources.edgar_filings:
+    if cfg.sources.edgar_filings and not light:
         try:
             current_sections = edgar_src.fetch_latest_filing_sections(
                 ticker, "10-K", cache, which=0
@@ -367,16 +633,19 @@ def _process_ticker(
         llm_model_used = f"{llm_client.last_provider} / {llm_client.last_model}"
 
     # --- Render and save report ---
-    report_md = _render_report_md(
-        ticker, company_name, description, metrics, scores,
-        extractions, synthesis_result, errors, llm_model_used,
-    )
-    report_path = f"{output_dir}/{ticker}_{run_stamp}_{run_id}.md"
-    with open(report_path, "w") as f:
-        f.write(report_md)
+    report_md = None
+    report_path = None
+    if write_report:
+        report_md = _render_report_md(
+            ticker, company_name, description, metrics, scores,
+            extractions, synthesis_result, errors, llm_model_used,
+        )
+        report_path = f"{output_dir}/{ticker}_{run_stamp}_{run_id}.md"
+        with open(report_path, "w") as f:
+            f.write(report_md)
 
-    upsert_output(cfg.db_path, run_id, ticker, report_md)
-    print(f"  Report saved: {report_path}")
+        upsert_output(cfg.db_path, run_id, ticker, report_md)
+        print(f"  Report saved: {report_path}")
 
     return TickerResult(
         ticker=ticker,
@@ -386,6 +655,7 @@ def _process_ticker(
         extractions=extractions,
         synthesis=synthesis_result,
         report_path=report_path,
+        report_md=report_md,
         errors=errors,
     )
 

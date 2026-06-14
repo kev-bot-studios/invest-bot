@@ -13,6 +13,7 @@ python3 -m src.cli --tickers NVDA AMD --sector technology   # any tickers
 python3 -m src.cli --tickers XOM CVX --sector energy        # rank against energy peers
 python3 -m src.cli --tickers AAPL --sector technology --llm-provider ollama  # force a specific LLM
 python3 -m src.cli --tickers JPM --sector financials --no-llm  # computed scores only, no API keys
+python3 -m src.cli --scan-sector --sector technology         # screen the whole sector, deep-dive the standouts
 ```
 
 `--sector` is **required** (or set `sector:` in the config) — there is no default. Scores are
@@ -20,6 +21,21 @@ peer-relative, so the sector must fit the tickers; running with a missing or unk
 fails fast and lists the valid options. See [Available sectors](#available-sectors).
 
 Reports are written to `reports/`, and every run is persisted to SQLite (`invest_bot.db`) for auditability.
+
+### Sector scan (idea generation)
+
+Instead of bringing your own tickers, `--scan-sector` brings names to you. It runs in two passes:
+
+1. **Wide pass** — scores *every* name in the sector peer universe on the computed factors only (no LLM calls), so it's cheap enough to run often.
+2. **Deep pass** — flags the most **value-divergent** names (high quality + growth, low valuation — the "why is this cheap?" candidates) and runs the full LLM analysis only on those.
+
+```bash
+python3 -m src.cli --scan-sector --sector technology              # default: deep-dive top 3
+python3 -m src.cli --scan-sector --sector energy --deep-count 2   # deep-dive top 2
+python3 -m src.cli --scan-sector --sector financials --no-llm     # wide screen only, no deep pass
+```
+
+Output is a single combined report (`reports/<sector>_scan_<timestamp>_<id>.md`): a ranked screen table of the whole universe (★ marks the flagged names), followed by the full deep dive on each flagged name and a head-to-head comparative ranking. `--deep-count N` sets how many names get the deep pass (default 3); flagged names that clear the divergence bar (quality & growth ≥ 3.5, valuation ≤ 2.5) come first, and if fewer than `N` qualify the closest candidates by divergence fill the rest. The first scan of a sector is slow (it pulls every peer fresh); subsequent runs use the cache.
 
 ### Available sectors
 

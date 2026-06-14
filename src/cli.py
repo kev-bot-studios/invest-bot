@@ -10,7 +10,7 @@ from rich.table import Table
 from rich import box
 
 from .config import load_config, load_dotenv, available_sectors
-from .pipeline import run, TickerResult
+from .pipeline import run, scan_sector, TickerResult, ScanResult
 
 console = Console()
 
@@ -26,6 +26,7 @@ Examples:
   python -m src.cli --tickers AAPL MSFT       # override tickers
   python -m src.cli --config config/my.yaml   # custom config file
   python -m src.cli --no-llm                  # skip LLM calls (scores only)
+  python -m src.cli --scan-sector --sector technology   # wide screen + deep dive on flagged names
         """,
     )
     parser.add_argument(
@@ -58,6 +59,16 @@ Examples:
     parser.add_argument(
         "--no-peer-refresh", action="store_true",
         help="Skip peer universe refresh (use cached distributions)",
+    )
+    parser.add_argument(
+        "--scan-sector", action="store_true",
+        help="Idea-generation mode: score the whole sector peer universe (no LLM), "
+             "flag the most value-divergent names, then run the full LLM analysis "
+             "only on those. Ignores --tickers. Emits one combined report.",
+    )
+    parser.add_argument(
+        "--deep-count", type=int, default=3, metavar="N",
+        help="Number of flagged names to analyze deeply in --scan-sector (default: 3)",
     )
 
     args = parser.parse_args()
@@ -111,14 +122,32 @@ Examples:
     # Print run header
     console.print()
     console.rule("[bold blue]Equity Analysis Pipeline[/bold blue]")
-    console.print(f"  Tickers : {', '.join(cfg.tickers)}")
-    console.print(f"  Sector  : {cfg.sector}")
+    if args.scan_sector:
+        console.print(f"  Mode    : sector scan (wide → deep, top {args.deep_count})")
+        console.print(f"  Sector  : {cfg.sector}")
+    else:
+        console.print(f"  Tickers : {', '.join(cfg.tickers)}")
+        console.print(f"  Sector  : {cfg.sector}")
     provider = cfg.first_available_provider()
     if provider:
         console.print(f"  LLM     : {provider.name} / {provider.model}")
     else:
         console.print("  LLM     : [yellow]no API key — computed scores only[/yellow]")
     console.print()
+
+    # Scan mode: wide screen + deep dive on flagged names, then exit.
+    if args.scan_sector:
+        try:
+            scan = scan_sector(cfg, output_dir=args.output_dir,
+                               deep_count=args.deep_count)
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Interrupted.[/yellow]")
+            sys.exit(1)
+        except Exception as e:
+            console.print(f"\n[red]Scan error: {e}[/red]")
+            raise
+        _print_scan_summary(scan)
+        return
 
     # Run pipeline
     try:
@@ -153,6 +182,64 @@ Examples:
 
     console.print()
     console.print(f"[dim]Run ID: {result.run_id} | DB: {cfg.db_path}[/dim]")
+    console.print()
+
+
+def _print_scan_summary(scan: ScanResult) -> None:
+    # Ranked sector screen
+    console.print()
+    console.rule("[bold blue]Sector Screen[/bold blue]")
+    table = Table(box=box.SIMPLE_HEAVY, show_header=True, header_style="bold")
+    table.add_column("", width=2)
+    table.add_column("Ticker", style="bold", width=8)
+    for col in ("Val", "Qual", "Grow", "Mom", "Insdr", "Comp"):
+        table.add_column(col, justify="center", width=6)
+
+    ranked = sorted(
+        scan.wide_results,
+        key=lambda r: (r.scores.get("composite") or 0.0), reverse=True,
+    )
+    for r in ranked:
+        flag = "[magenta]★[/magenta]" if r.ticker in scan.qualifying else ""
+        s = r.scores
+
+        def _c(key: str) -> str:
+            v = s.get(key)
+            if v is None:
+                return "[dim]—[/dim]"
+            return _score_cell(float(v), key == "composite")
+
+        table.add_row(
+            flag, r.ticker, _c("valuation"), _c("quality"), _c("growth"),
+            _c("momentum"), _c("insider"), _c("composite"),
+        )
+    console.print(table)
+    console.print("[dim]★ = value-divergence flag (high quality+growth, low valuation)[/dim]")
+
+    # Flagged / deep
+    console.print()
+    console.rule("[bold blue]Deep Analysis[/bold blue]")
+    if scan.flagged:
+        console.print(f"  Analyzed: [cyan]{', '.join(scan.flagged)}[/cyan]")
+        for r in scan.deep_results:
+            if r.synthesis:
+                lean = r.synthesis.get("buy_sell_lean", "N/A")
+                conf = r.synthesis.get("lean_confidence", "")
+                lc = _lean_color(lean)
+                console.print(f"    {r.ticker}: [{lc}]{lean}[/{lc}] ({conf} confidence)")
+    else:
+        console.print("  [yellow]No names flagged for deep analysis.[/yellow]")
+
+    if scan.comparative:
+        ranking = scan.comparative.get("overall_ranking", [])
+        if ranking:
+            console.print(f"  Ranking: {' > '.join(ranking)}")
+
+    console.print()
+    console.rule("[bold blue]Report[/bold blue]")
+    console.print(f"  [cyan]{scan.scan_report_path}[/cyan]")
+    console.print()
+    console.print(f"[dim]Run ID: {scan.run_id}[/dim]")
     console.print()
 
 
