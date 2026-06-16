@@ -1,0 +1,59 @@
+# Technology sector — mid-cap peer universe (~50 names, roughly $2B–$15B market cap)
+# Curated for value-prop scans of mid-cap tech (SaaS, cybersecurity, semis, networking).
+# Distinct from technology.yaml (large/mega-cap). Used for percentile ranking. Update quarterly.
+sector: technology_midcap
+tickers:
+  # SaaS / application software
+  - PATH   # UiPath
+  - GTLB   # GitLab
+  - BILL   # Bill.com
+  - FROG   # JFrog
+  - ESTC   # Elastic
+  - PCTY   # Paylocity
+  - PCOR   # Procore
+  - CFLT   # Confluent
+  - APPN   # Appian
+  - BL     # BlackLine
+  - BOX    # Box
+  - SMAR   # Smartsheet
+  - ASAN   # Asana
+  - DOCN   # DigitalOcean
+  - FSLY   # Fastly
+  - PD     # PagerDuty
+  - BRZE   # Braze
+  - AMPL   # Amplitude
+  - DOMO   # Domo
+  - WK     # Workiva
+  - FIVN   # Five9
+  - NCNO   # nCino
+  - QTWO   # Q2 Holdings
+  - PRGS   # Progress Software
+  - PEGA   # Pegasystems
+  # Cybersecurity
+  - S      # SentinelOne
+  - TENB   # Tenable
+  - RPD    # Rapid7
+  - VRNS   # Varonis
+  - QLYS   # Qualys
+  - DBX    # Dropbox
+  - ZI     # ZoomInfo
+  # Semiconductors
+  - LSCC   # Lattice Semiconductor
+  - SLAB   # Silicon Labs
+  - POWI   # Power Integrations
+  - AMBA   # Ambarella
+  - CRUS   # Cirrus Logic
+  - SYNA   # Synaptics
+  - DIOD   # Diodes
+  - MTSI   # MACOM Technology
+  - FORM   # FormFactor
+  - ONTO   # Onto Innovation
+  - ACLS   # Axcelis Technologies
+  - RMBS   # Rambus
+  - SITM   # SiTime
+  - CRDO   # Credo Technology
+  # Networking / hardware
+  - CIEN   # Ciena
+  - CALX   # Calix
+  - EXTR   # Extreme Networks
+  - NTGR   # Netgear
