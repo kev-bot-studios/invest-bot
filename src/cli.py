@@ -194,6 +194,7 @@ def _print_scan_summary(scan: ScanResult) -> None:
     table.add_column("Ticker", style="bold", width=8)
     for col in ("Val", "Qual", "Grow", "Mom", "Insdr", "Comp"):
         table.add_column(col, justify="center", width=6)
+    table.add_column("Data", justify="center", width=6)
 
     ranked = sorted(
         scan.wide_results,
@@ -209,12 +210,19 @@ def _print_scan_summary(scan: ScanResult) -> None:
                 return "[dim]—[/dim]"
             return _score_cell(float(v), key == "composite")
 
+        depth = (s.get("data_depth") or {}).get("label", "—")
+        depth_color = {"full": "green", "ltd": "yellow", "thin": "red"}.get(depth, "dim")
+
         table.add_row(
             flag, r.ticker, _c("valuation"), _c("quality"), _c("growth"),
             _c("momentum"), _c("insider"), _c("composite"),
+            f"[{depth_color}]{depth}[/{depth_color}]",
         )
     console.print(table)
     console.print("[dim]★ = value-divergence flag (high quality+growth, low valuation)[/dim]")
+    console.print("[dim]Data = history depth: [green]full[/green]≥2y/4FY · "
+                  "[yellow]ltd[/yellow] partial · [red]thin[/red]<1y public — "
+                  "thin growth/momentum scores are missing-data, not weak[/dim]")
 
     # Flagged / deep
     console.print()
