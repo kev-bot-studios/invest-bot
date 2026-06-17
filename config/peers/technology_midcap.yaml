@@ -1,9 +1,14 @@
-# Technology sector — mid-cap peer universe (~50 names, roughly $2B–$15B market cap)
-# Curated for value-prop scans of mid-cap tech (SaaS, cybersecurity, semis, networking).
+# Technology sector — mid-cap peer universe (~79 names, roughly $1.3B–$20B market cap)
+# Curated + market-cap-validated 2026-06-16 for value-prop scans of mid-cap tech.
 # Distinct from technology.yaml (large/mega-cap). Used for percentile ranking. Update quarterly.
+#
+# Excluded by design (verified 2026-06-16):
+#   - Delisted/private: CFLT (IBM acq. 3/2026), SMAR (Blackstone/Vista), DAY, COMM
+#   - Outgrew to large-cap (>$20B): CRDO, MTSI, CIEN, LITE, COHR, AMKR, PSTG, MKSI, ZI->GTM moot
+#   - Shrank to small-cap (<$1.3B): DOMO, RPD, PD, NTGR, AMPL, GTM, ASGN, SPT, NABL, OSPN
 sector: technology_midcap
 tickers:
-  # SaaS / application software
+  # Application & vertical SaaS
   - PATH   # UiPath
   - GTLB   # GitLab
   - BILL   # Bill.com
@@ -11,33 +16,55 @@ tickers:
   - ESTC   # Elastic
   - PCTY   # Paylocity
   - PCOR   # Procore
-  - CFLT   # Confluent
   - APPN   # Appian
   - BL     # BlackLine
   - BOX    # Box
-  - SMAR   # Smartsheet
   - ASAN   # Asana
-  - DOCN   # DigitalOcean
-  - FSLY   # Fastly
-  - PD     # PagerDuty
   - BRZE   # Braze
-  - AMPL   # Amplitude
-  - DOMO   # Domo
   - WK     # Workiva
-  - FIVN   # Five9
   - NCNO   # nCino
   - QTWO   # Q2 Holdings
   - PRGS   # Progress Software
   - PEGA   # Pegasystems
-  # Cybersecurity
+  - FIVN   # Five9
+  - AI     # C3.ai
+  - INTA   # Intapp
+  - VERX   # Vertex
+  - AGYS   # Agilysys
+  - DSGX   # Descartes Systems
+  - DOX    # Amdocs
+  - CVLT   # Commvault Systems
+  - FRSH   # Freshworks
+  - DV     # DoubleVerify
+  - SEMR   # Semrush
+  - KVYO   # Klaviyo
+  - CWAN   # Clearwater Analytics
+  - ZETA   # Zeta Global
+  - BLKB   # Blackbaud
+  - CSGS   # CSG Systems
+  - WIX    # Wix.com
+  - ALRM   # Alarm.com
+  - DBX    # Dropbox
+  # Cybersecurity & identity
   - S      # SentinelOne
   - TENB   # Tenable
-  - RPD    # Rapid7
   - VRNS   # Varonis
   - QLYS   # Qualys
-  - DBX    # Dropbox
-  - ZI     # ZoomInfo
-  # Semiconductors
+  - SAIL   # SailPoint
+  # Cloud / networking / connectivity
+  - DOCN   # DigitalOcean
+  - FSLY   # Fastly
+  - CALX   # Calix
+  - EXTR   # Extreme Networks
+  - HLIT   # Harmonic
+  - VIAV   # Viavi Solutions
+  # IT services & digital engineering
+  - GLOB   # Globant
+  - EPAM   # EPAM Systems
+  - CNXC   # Concentrix
+  - EXLS   # ExlService
+  - KD     # Kyndryl
+  # Semiconductors & semicap equipment
   - LSCC   # Lattice Semiconductor
   - SLAB   # Silicon Labs
   - POWI   # Power Integrations
@@ -45,15 +72,25 @@ tickers:
   - CRUS   # Cirrus Logic
   - SYNA   # Synaptics
   - DIOD   # Diodes
-  - MTSI   # MACOM Technology
   - FORM   # FormFactor
   - ONTO   # Onto Innovation
   - ACLS   # Axcelis Technologies
   - RMBS   # Rambus
   - SITM   # SiTime
-  - CRDO   # Credo Technology
-  # Networking / hardware
-  - CIEN   # Ciena
-  - CALX   # Calix
-  - EXTR   # Extreme Networks
-  - NTGR   # Netgear
+  - SWKS   # Skyworks Solutions
+  - QRVO   # Qorvo
+  - SMTC   # Semtech
+  - ALGM   # Allegro MicroSystems
+  - NVMI   # Nova
+  - CAMT   # Camtek
+  - KLIC   # Kulicke & Soffa
+  - AEIS   # Advanced Energy Industries
+  - AOSL   # Alpha & Omega Semiconductor
+  # Electronics manufacturing / hardware
+  - SANM   # Sanmina
+  - PLXS   # Plexus
+  # Internet / online marketplaces
+  - YELP   # Yelp
+  - TRIP   # Tripadvisor
+  - CARG   # CarGurus
+  - ZD     # Ziff Davis
