@@ -166,7 +166,7 @@ def compute_metrics(snapshot: dict) -> dict:
     # Fallback to yfinance quarterly income
     if not rev_vals:
         ann = annual_income or {}
-        rev_vals = [d.get("Total Revenue") for d in sorted(ann.values(), reverse=True) if isinstance(d, dict)]
+        rev_vals = [d.get("Total Revenue") for _, d in sorted(ann.items(), reverse=True) if isinstance(d, dict)]
         rev_vals = [v for v in rev_vals if v is not None]
 
     # YoY growth (latest vs prior year)
