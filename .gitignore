@@ -26,3 +26,6 @@ config/secrets.yaml
 .idea/
 .vscode/
 *.swp
+
+# macOS
+.DS_Store

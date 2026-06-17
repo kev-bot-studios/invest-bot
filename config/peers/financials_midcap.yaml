@@ -1,0 +1,60 @@
+# Financials sector — mid-cap peer universe (~50 names, roughly $2B–$15B market cap)
+# Curated for value-prop scans of mid-cap financials (regional banks, insurers,
+# asset managers / capital markets, specialty finance).
+# Distinct from financials.yaml (large/mega-cap). Used for percentile ranking. Update quarterly.
+sector: financials_midcap
+tickers:
+  # Regional / community banks
+  - WAL    # Western Alliance
+  - ZION   # Zions Bancorporation
+  - CFR    # Cullen/Frost Bankers
+  - EWBC   # East West Bancorp
+  - CMA    # Comerica
+  - WBS    # Webster Financial
+  - FHN    # First Horizon
+  - SNV    # Synovus Financial
+  - PB     # Prosperity Bancshares
+  - CBSH   # Commerce Bancshares
+  - OZK    # Bank OZK
+  - HWC    # Hancock Whitney
+  - UMBF   # UMB Financial
+  - WTFC   # Wintrust Financial
+  - VLY    # Valley National Bancorp
+  - ONB    # Old National Bancorp
+  - GBCI   # Glacier Bancorp
+  - PNFP   # Pinnacle Financial Partners
+  - CATY   # Cathay General Bancorp
+  - FIBK   # First Interstate BancSystem
+  # Insurance
+  - RGA    # Reinsurance Group of America
+  - AFG    # American Financial Group
+  - ORI    # Old Republic International
+  - KMPR   # Kemper
+  - THG    # Hanover Insurance
+  - SIGI   # Selective Insurance
+  - RLI    # RLI Corp
+  - MCY    # Mercury General
+  - ESNT   # Essent Group
+  - MTG    # MGIC Investment
+  - RDN    # Radian Group
+  - PRI    # Primerica
+  - UNM    # Unum Group
+  - AGO    # Assured Guaranty
+  # Asset managers / capital markets
+  - JEF    # Jefferies Financial
+  - SF     # Stifel Financial
+  - EVR    # Evercore
+  - HLI    # Houlihan Lokey
+  - PJT    # PJT Partners
+  - LAZ    # Lazard
+  - APAM   # Artisan Partners
+  - FHI    # Federated Hermes
+  - JHG    # Janus Henderson
+  - WT     # WisdomTree
+  - HLNE   # Hamilton Lane
+  - VIRT   # Virtu Financial
+  - MKTX   # MarketAxess
+  # Specialty finance / fintech
+  - EEFT   # Euronet Worldwide
+  - ENVA   # Enova International
+  - NAVI   # Navient

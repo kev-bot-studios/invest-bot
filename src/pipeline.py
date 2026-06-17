@@ -369,10 +369,15 @@ def _render_scan_md(
         "## Sector Screen (wide pass)",
         "",
         "Ranked by composite. ★ flags names with high quality + growth and low "
-        "valuation (the value-divergence candidates analyzed below).",
+        "valuation (the value-divergence candidates analyzed below). **Data** = "
+        "history backing the score: `full` (≥2y public, ≥4 fiscal years), `ltd` "
+        "(has YoY but no 3y trend), `thin` (<1y public or <2 fiscal years — "
+        "growth/momentum scores unreliable). Composites renormalize over the "
+        "factors that have data, so a `thin` name isn't penalized for missing "
+        "history — but treat its rank with caution.",
         "",
-        "| | Ticker | Valuation | Quality | Growth | Momentum | Insider | Composite |",
-        "|---|--------|-----------|---------|--------|----------|---------|-----------|",
+        "| | Ticker | Valuation | Quality | Growth | Momentum | Insider | Composite | Data |",
+        "|---|--------|-----------|---------|--------|----------|---------|-----------|------|",
     ]
     ranked = sorted(
         wide_results, key=lambda r: (r.scores.get("composite") or 0.0), reverse=True
@@ -380,11 +385,12 @@ def _render_scan_md(
     for r in ranked:
         flag = "★" if r.ticker in qualifying else ""
         s = r.scores
+        depth = (s.get("data_depth") or {}).get("label", "—")
         lines.append(
             f"| {flag} | {r.ticker} | {_sfmt(s.get('valuation'))} | "
             f"{_sfmt(s.get('quality'))} | {_sfmt(s.get('growth'))} | "
             f"{_sfmt(s.get('momentum'))} | {_sfmt(s.get('insider'))} | "
-            f"{_sfmt(s.get('composite'))} |"
+            f"{_sfmt(s.get('composite'))} | {depth} |"
         )
     lines.append("")
 
@@ -547,6 +553,7 @@ def _process_ticker(
     metrics["peer_percentiles"] = percentiles
     scores = metrics_eng.score_metrics(metrics, peer_distributions)
     scores["composite"] = metrics_eng.compute_composite(scores, cfg.weights)
+    scores["data_depth"] = metrics_eng.data_depth(metrics)
     print(f"  Metrics computed. Composite score: {scores.get('composite')}")
 
     # Persist snapshot + metrics + scores

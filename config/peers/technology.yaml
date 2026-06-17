@@ -1,29 +1,105 @@
-# Technology sector peer universe (~25 large-cap tech names)
-# Used for percentile ranking. Update quarterly.
+# Technology sector — large-cap peer universe (~87 names, all >$20B market cap)
+# Market-cap-validated 2026-06-16. Broad "tech & tech-adjacent" definition
+# (incl. internet platforms, fintech/payments, semis) consistent with the
+# existing inclusion of AMZN/META/GOOGL. Used for percentile ranking. Update quarterly.
+#
+# Excluded (verified 2026-06-16):
+#   - Delisted/acquired: ANSS (Synopsys), CYBR (PANW deal pending/unresolvable)
+#   - Ticker change: SQ -> XYZ (Block)
+#   - Unresolvable in yfinance: FI (Fiserv)
 sector: technology
 tickers:
+  # Mega-cap platforms & internet
   - AAPL
   - MSFT
   - GOOGL
   - GOOG
-  - META
   - AMZN
+  - META
+  - NFLX
+  # Semiconductors & semicap equipment
   - NVDA
-  - AMD
-  - INTC
-  - QCOM
   - AVGO
+  - TSM
+  - AMD
+  - QCOM
   - TXN
+  - MU
+  - ADI
+  - MRVL
+  - NXPI
+  - MCHP
+  - "ON"
+  - STM
+  - ASML
+  - AMAT
+  - LRCX
+  - KLAC
+  - TER
+  - ENTG
+  - GFS
+  - MPWR
+  # Enterprise software & data
   - ORCL
   - CRM
-  - ADBE
+  - SAP
+  - IBM
   - NOW
+  - INTU
+  - ADBE
   - SNOW
-  - SHOP
-  - NET
+  - PLTR
+  - WDAY
+  - ADSK
+  - SNPS
+  - CDNS
+  - ROP
+  - MDB
   - DDOG
+  - NET
+  - TEAM
+  - ZM
+  # Cybersecurity
   - PANW
   - CRWD
+  - FTNT
   - ZS
-  - MDB
-  - TEAM
+  - OKTA
+  # Consumer internet / media / gaming
+  - UBER
+  - ABNB
+  - DASH
+  - BKNG
+  - SPOT
+  - RDDT
+  - RBLX
+  - TTWO
+  - EA
+  - ROKU
+  # Fintech / payments / adtech
+  - V
+  - MA
+  - PYPL
+  - XYZ
+  - COIN
+  - HOOD
+  - AFRM
+  - ADYEY
+  - FIS
+  - APP
+  # Hardware / networking / storage / devices
+  - CSCO
+  - ANET
+  - DELL
+  - HPQ
+  - HPE
+  - STX
+  - WDC
+  - NTAP
+  - GLW
+  - APH
+  - TEL
+  - KEYS
+  # IT services & commerce
+  - ACN
+  - SHOP

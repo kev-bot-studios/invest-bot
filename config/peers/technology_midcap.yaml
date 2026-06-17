@@ -1,0 +1,96 @@
+# Technology sector — mid-cap peer universe (~79 names, roughly $1.3B–$20B market cap)
+# Curated + market-cap-validated 2026-06-16 for value-prop scans of mid-cap tech.
+# Distinct from technology.yaml (large/mega-cap). Used for percentile ranking. Update quarterly.
+#
+# Excluded by design (verified 2026-06-16):
+#   - Delisted/private: CFLT (IBM acq. 3/2026), SMAR (Blackstone/Vista), DAY, COMM
+#   - Outgrew to large-cap (>$20B): CRDO, MTSI, CIEN, LITE, COHR, AMKR, PSTG, MKSI, ZI->GTM moot
+#   - Shrank to small-cap (<$1.3B): DOMO, RPD, PD, NTGR, AMPL, GTM, ASGN, SPT, NABL, OSPN
+sector: technology_midcap
+tickers:
+  # Application & vertical SaaS
+  - PATH   # UiPath
+  - GTLB   # GitLab
+  - BILL   # Bill.com
+  - FROG   # JFrog
+  - ESTC   # Elastic
+  - PCTY   # Paylocity
+  - PCOR   # Procore
+  - APPN   # Appian
+  - BL     # BlackLine
+  - BOX    # Box
+  - ASAN   # Asana
+  - BRZE   # Braze
+  - WK     # Workiva
+  - NCNO   # nCino
+  - QTWO   # Q2 Holdings
+  - PRGS   # Progress Software
+  - PEGA   # Pegasystems
+  - FIVN   # Five9
+  - AI     # C3.ai
+  - INTA   # Intapp
+  - VERX   # Vertex
+  - AGYS   # Agilysys
+  - DSGX   # Descartes Systems
+  - DOX    # Amdocs
+  - CVLT   # Commvault Systems
+  - FRSH   # Freshworks
+  - DV     # DoubleVerify
+  - SEMR   # Semrush
+  - KVYO   # Klaviyo
+  - CWAN   # Clearwater Analytics
+  - ZETA   # Zeta Global
+  - BLKB   # Blackbaud
+  - CSGS   # CSG Systems
+  - WIX    # Wix.com
+  - ALRM   # Alarm.com
+  - DBX    # Dropbox
+  # Cybersecurity & identity
+  - S      # SentinelOne
+  - TENB   # Tenable
+  - VRNS   # Varonis
+  - QLYS   # Qualys
+  - SAIL   # SailPoint
+  # Cloud / networking / connectivity
+  - DOCN   # DigitalOcean
+  - FSLY   # Fastly
+  - CALX   # Calix
+  - EXTR   # Extreme Networks
+  - HLIT   # Harmonic
+  - VIAV   # Viavi Solutions
+  # IT services & digital engineering
+  - GLOB   # Globant
+  - EPAM   # EPAM Systems
+  - CNXC   # Concentrix
+  - EXLS   # ExlService
+  - KD     # Kyndryl
+  # Semiconductors & semicap equipment
+  - LSCC   # Lattice Semiconductor
+  - SLAB   # Silicon Labs
+  - POWI   # Power Integrations
+  - AMBA   # Ambarella
+  - CRUS   # Cirrus Logic
+  - SYNA   # Synaptics
+  - DIOD   # Diodes
+  - FORM   # FormFactor
+  - ONTO   # Onto Innovation
+  - ACLS   # Axcelis Technologies
+  - RMBS   # Rambus
+  - SITM   # SiTime
+  - SWKS   # Skyworks Solutions
+  - QRVO   # Qorvo
+  - SMTC   # Semtech
+  - ALGM   # Allegro MicroSystems
+  - NVMI   # Nova
+  - CAMT   # Camtek
+  - KLIC   # Kulicke & Soffa
+  - AEIS   # Advanced Energy Industries
+  - AOSL   # Alpha & Omega Semiconductor
+  # Electronics manufacturing / hardware
+  - SANM   # Sanmina
+  - PLXS   # Plexus
+  # Internet / online marketplaces
+  - YELP   # Yelp
+  - TRIP   # Tripadvisor
+  - CARG   # CarGurus
+  - ZD     # Ziff Davis

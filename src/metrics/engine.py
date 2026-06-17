@@ -166,8 +166,11 @@ def compute_metrics(snapshot: dict) -> dict:
     # Fallback to yfinance quarterly income
     if not rev_vals:
         ann = annual_income or {}
-        rev_vals = [d.get("Total Revenue") for d in sorted(ann.values(), reverse=True) if isinstance(d, dict)]
+        rev_vals = [d.get("Total Revenue") for _, d in sorted(ann.items(), reverse=True) if isinstance(d, dict)]
         rev_vals = [v for v in rev_vals if v is not None]
+
+    # Data-depth: how many annual fiscal periods back the growth factor
+    metrics["annual_periods"] = len(rev_vals)
 
     # YoY growth (latest vs prior year)
     metrics["revenue_yoy"] = _pct_change(rev_vals[0] if len(rev_vals) > 0 else None,
@@ -198,6 +201,7 @@ def compute_metrics(snapshot: dict) -> dict:
     # --- Momentum (from price history) ---
     closes = prices.get("close", [])
     dates_list = prices.get("dates", [])
+    metrics["price_history_days"] = len(closes)
 
     def _ret_n_days(n: int) -> Optional[float]:
         # A year of trading days is ~251; tolerate slightly short histories
@@ -490,3 +494,37 @@ def compute_composite(scores: dict, weights_cfg) -> Optional[float]:
     if total_weight == 0:
         return None
     return round(weighted_sum / total_weight, 2)
+
+
+def data_depth(metrics: dict) -> dict:
+    """Classify how much history backs the history-dependent factors.
+
+    Two independent axes:
+      * Growth depth — number of annual fiscal periods on file (YoY needs 2, a
+        3y CAGR needs 4). This is the real "how long public" proxy, since a
+        recent IPO has only 1–2 annual filings.
+      * Momentum availability — whether we have ~1y of prices for the 12-month
+        return. NOTE: the price fetch is capped at ~1y by design, so price
+        history measures *computability of momentum*, not company age — a name
+        public for decades still returns ~251 days here. We reuse the same 0.95
+        tolerance as the 12-month return so a normal 251-day year counts as full.
+
+    The weaker axis drives the label. Composites already renormalize over the
+    factors that have data, so this is purely a confidence signal: it tells you
+    when a low growth/momentum score is missing-data rather than genuinely weak.
+    """
+    price_days = metrics.get("price_history_days", 0) or 0
+    fiscal_years = metrics.get("annual_periods", 0) or 0
+    momentum_ok = price_days >= int(252 * 0.95)   # ~239d; matches return_12m tolerance
+    if fiscal_years < 2 or not momentum_ok:
+        label = "thin"   # <2 fiscal years, or <~1y of prices → growth/momentum unreliable
+    elif fiscal_years < 4:
+        label = "ltd"    # has YoY + momentum, but not a full 3y trend yet
+    else:
+        label = "full"
+    return {
+        "price_days": price_days,
+        "fiscal_years": fiscal_years,
+        "momentum_ok": momentum_ok,
+        "label": label,
+    }
